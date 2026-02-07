@@ -1,26 +1,422 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" data-theme="dark">
 <head>
-  <title>360° Apartment Tour</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>360° Experience • All in One View</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="https://cdn.pannellum.org/2.5/pannellum.css"/>
   <script src="https://cdn.pannellum.org/2.5/pannellum.js"></script>
 
   <style>
-    body { margin:0; }
-    #panorama { width:100vw; height:100vh; }
+    :root {
+      --bg: #0f0f17;
+      --bg-card: rgba(20, 20, 35, 0.7);
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --border: rgba(255,255,255,0.09);
+      --shadow: 0 20px 50px -15px rgba(0,0,0,0.65);
+    }
+
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --bg-card: rgba(255,255,255,0.82);
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #4f46e5;
+      --border: rgba(0,0,0,0.07);
+      --shadow: 0 12px 35px -10px rgba(0,0,0,0.15);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2.5rem 1rem 4rem;
+      transition: background 0.5s ease;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 4.2rem);
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent), #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      margin-top: 0.6rem;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      margin: 2rem 0 3rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .theme-toggle {
+      background: rgba(255,255,255,0.09);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 1.4rem;
+    }
+
+    .theme-toggle:hover { transform: scale(1.12); }
+
+    .tab-group {
+      display: flex;
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 6px;
+      box-shadow: var(--shadow);
+    }
+
+    .tab {
+      padding: 12px 24px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+
+    .tab:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+    .tab.active {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 16px rgba(99,102,241,0.45);
+    }
+
+    .tab-content {
+      max-width: 960px;
+      margin: 0 auto;
+      position: relative;
+      min-height: 600px; /* prevents jump when switching to panorama */
+    }
+
+    .panel {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+
+    .panel.active {
+      opacity: 1;
+      pointer-events: auto;
+      position: relative;
+    }
+
+    .viewer-container {
+      position: relative;
+      margin: 2rem auto 1.5rem;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px -20px rgba(0,0,0,0.5);
+    }
+
+    .viewer-container img,
+    #panorama {
+      width: 100%;
+      display: block;
+      border-radius: 16px;
+    }
+
+    #panorama {
+      height: 65vh;
+      min-height: 540px;
+    }
+
+    .loader {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .bounce {
+      width: 16px; height: 16px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin: 0 9px;
+      animation: bounce 1.25s infinite ease-in-out both;
+    }
+
+    .bounce:nth-child(2) { animation-delay: -0.22s; }
+    .bounce:nth-child(1) { animation-delay: -0.44s; }
+
+    @keyframes bounce {
+      0%,80%,100% { transform: scale(0); opacity: 0.35; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    .info {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      .tab-group { padding: 5px; }
+      .tab { padding: 10px 18px; font-size: 0.95rem; }
+      .controls { flex-direction: column; gap: 1.5rem; }
+    }
   </style>
 </head>
 <body>
-  <div id="panorama"></div>
 
-  <script>
-    pannellum.viewer('panorama', {
-      "type": "equirectangular",
-      "panorama": "img/aerial-drone-.jpg", 
-      "autoLoad": true,
-      "autoRotate": -2,
-      "showControls": true
-    });
-  </script>
+<header>
+  <h1>360° Experience</h1>
+  <p class="subtitle">Switch between control styles — content stays in the same place</p>
+</header>
+
+<div class="controls">
+  <button class="theme-toggle" title="Toggle theme">☀️</button>
+
+  <div class="tab-group">
+    <button class="tab active" data-tab="drag">Drag</button>
+    <button class="tab" data-tab="mousemove">Mouse Move</button>
+    <button class="tab" data-tab="arrows">Arrows</button>
+    <button class="tab" data-tab="wheel">Wheel</button>
+    <button class="tab" data-tab="pano">Panorama</button>
+  </div>
+</div>
+
+<div class="tab-content">
+
+  <div class="panel active" id="panel-drag">
+    <h2>Drag to Rotate</h2>
+    <div class="viewer-container">
+      <div class="loader"><div class="bounce"></div><div class="bounce"></div><div class="bounce"></div></div>
+      <img id="img-drag" src="img/1.png" alt="360 product" draggable="false">
+    </div>
+    <div class="info">Click + drag left/right • works on touch too</div>
+  </div>
+
+  <div class="panel" id="panel-mousemove">
+    <h2>Mouse Move</h2>
+    <div class="viewer-container">
+      <div class="loader"><div class="bounce"></div><div class="bounce"></div><div class="bounce"></div></div>
+      <img id="img-mousemove" src="img/1.png" alt="Product 360" draggable="false">
+    </div>
+    <div class="info">Just move mouse left/right over the image</div>
+  </div>
+
+  <div class="panel" id="panel-arrows">
+    <h2>Arrow Keys</h2>
+    <div class="viewer-container">
+      <div class="loader"><div class="bounce"></div><div class="bounce"></div><div class="bounce"></div></div>
+      <img id="img-arrows" src="img/1.png" alt="Product 360" tabindex="0">
+    </div>
+    <div class="info">Click image to focus → use ← → (or ↑ ↓)</div>
+  </div>
+
+  <div class="panel" id="panel-wheel">
+    <h2>Mouse Wheel / Trackpad</h2>
+    <div class="viewer-container">
+      <div class="loader"><div class="bounce"></div><div class="bounce"></div><div class="bounce"></div></div>
+      <img id="img-wheel" src="img/1.png" alt="Product 360">
+    </div>
+    <div class="info">Hover image → scroll wheel or two-finger swipe</div>
+  </div>
+
+  <div class="panel" id="panel-pano">
+    <h2>360° Apartment Panorama</h2>
+    <div class="viewer-container">
+      <div class="loader"><div class="bounce"></div><div class="bounce"></div><div class="bounce"></div></div>
+      <div id="panorama"></div>
+    </div>
+    <div class="info">Drag to look around • auto-rotates slowly</div>
+  </div>
+
+</div>
+
+<script>
+
+const themeToggle = document.querySelector('.theme-toggle');
+const html = document.documentElement;
+
+function setTheme(theme) {
+  html.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
+}
+
+const saved = localStorage.getItem('theme') ||
+  (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+setTheme(saved);
+
+themeToggle.addEventListener('click', () => {
+  setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+
+    const target = document.getElementById(`panel-${tab.dataset.tab}`);
+    if (target) target.classList.add('active');
+  });
+});
+
+// ────────────────────────────────────────────────
+//   360° product logic (same for all product viewers)
+// ────────────────────────────────────────────────
+
+const TOTAL_FRAMES = 51;
+const PATH = "img/";
+const EXT = "png";
+
+function updateFrame(img, frame) {
+  let n = ((frame - 1 + TOTAL_FRAMES) % TOTAL_FRAMES) + 1;
+  img.src = `${PATH}${n}.${EXT}`;
+}
+
+function hideLoader(el) {
+  setTimeout(() => {
+    const loader = el.closest('.viewer-container')?.querySelector('.loader');
+    if (loader) loader.style.display = 'none';
+  }, 300);
+}
+
+// Drag
+{
+  const img = document.getElementById("img-drag");
+  let isDragging = false, prevX = 0, frame = 1;
+
+  img.addEventListener("mousedown", e => { isDragging = true; prevX = e.clientX; e.preventDefault(); });
+  img.addEventListener("touchstart", e => { isDragging = true; prevX = e.touches[0].clientX; });
+
+  const move = e => {
+    if (!isDragging) return;
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    const d = x - prevX;
+    if (Math.abs(d) > 4) {
+      frame += d > 0 ? -1 : 1;
+      updateFrame(img, frame);
+      prevX = x;
+    }
+  };
+
+  window.addEventListener("mousemove", move);
+  img.addEventListener("touchmove", move, {passive:false});
+  window.addEventListener("mouseup",   () => isDragging = false);
+  window.addEventListener("mouseleave",() => isDragging = false);
+  img.addEventListener("touchend",     () => isDragging = false);
+
+  window.addEventListener("load", () => hideLoader(img));
+}
+
+// Mouse move
+{
+  const img = document.getElementById("img-mousemove");
+  let lastX = window.innerWidth / 2, frame = 1;
+
+  const move = e => {
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    const d = x - lastX;
+    if (Math.abs(d) > 5) {
+      frame += d > 0 ? -1 : 1;
+      updateFrame(img, frame);
+      lastX = x;
+    }
+  };
+
+  img.addEventListener("mousemove", move);
+  img.addEventListener("touchmove", move, {passive:false});
+  window.addEventListener("load", () => hideLoader(img));
+}
+
+// Arrows
+{
+  const img = document.getElementById("img-arrows");
+  let frame = 1;
+
+  img.addEventListener("keydown", e => {
+    if (["ArrowLeft","ArrowUp"].includes(e.key))   { e.preventDefault(); frame--; updateFrame(img, frame); }
+    if (["ArrowRight","ArrowDown"].includes(e.key)) { e.preventDefault(); frame++; updateFrame(img, frame); }
+  });
+
+  window.addEventListener("load", () => hideLoader(img));
+}
+
+// Wheel
+{
+  const img = document.getElementById("img-wheel");
+  let frame = 1;
+
+  img.addEventListener("wheel", e => {
+    e.preventDefault();
+    frame += e.deltaY > 0 ? 1 : -1;
+    updateFrame(img, frame);
+  }, {passive:false});
+
+  window.addEventListener("load", () => hideLoader(img));
+}
+
+// Panorama
+{
+  const container = document.getElementById("panorama");
+  pannellum.viewer('panorama', {
+    "type": "equirectangular",
+    "panorama": "img/aerial-drone-.jpg",
+    "autoLoad": true,
+    "autoRotate": -2.2,
+    "showControls": true,
+    "showFullscreenCtrl": true,
+    "showZoomCtrl": true,
+    "hfov": 100
+  }).on('load', () => {
+    const loader = container.closest('.viewer-container')?.querySelector('.loader');
+    if (loader) loader.style.display = 'none';
+  });
+}
+</script>
 </body>
 </html>
