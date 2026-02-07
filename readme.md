@@ -43,4 +43,3 @@ Supported interaction modes:
 - Google Fonts (Inter) via link preconnect
 - Local image assets (51 PNG frames + 1 panorama JPG)
 
-## Folder Structure (expected by the project)
