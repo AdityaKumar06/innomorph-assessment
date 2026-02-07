@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>360° Apartment Tour</title>
+  <link rel="stylesheet" href="https://cdn.pannellum.org/2.5/pannellum.css"/>
+  <script src="https://cdn.pannellum.org/2.5/pannellum.js"></script>
+
+  <style>
+    body { margin:0; }
+    #panorama { width:100vw; height:100vh; }
+  </style>
+</head>
+<body>
+  <div id="panorama"></div>
+
+  <script>
+    pannellum.viewer('panorama', {
+      "type": "equirectangular",
+      "panorama": "img/aerial-drone-.jpg", 
+      "autoLoad": true,
+      "autoRotate": -2,
+      "showControls": true
+    });
+  </script>
+</body>
+</html>
