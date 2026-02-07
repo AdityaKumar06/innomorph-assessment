@@ -121,7 +121,7 @@
       max-width: 960px;
       margin: 0 auto;
       position: relative;
-      min-height: 600px; /* prevents jump when switching to panorama */
+      min-height: 600px; 
     }
 
     .panel {
@@ -292,7 +292,7 @@ themeToggle.addEventListener('click', () => {
   setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 });
 
-// Tab switching
+
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -305,9 +305,7 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
-// ────────────────────────────────────────────────
-//   360° product logic (same for all product viewers)
-// ────────────────────────────────────────────────
+
 
 const TOTAL_FRAMES = 51;
 const PATH = "img/";
