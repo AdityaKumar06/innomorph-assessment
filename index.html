@@ -1,502 +1,678 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>360° Experience • All in One View</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.pannellum.org/2.5/pannellum.css"/>
-  <script src="https://cdn.pannellum.org/2.5/pannellum.js"></script>
-  <style>
-    :root {
-      --bg: #0f0f17;
-      --bg-card: rgba(20, 20, 35, 0.7);
-      --text: #e2e8f0;
-      --text-muted: #94a3b8;
-      --accent: #6366f1;
-      --border: rgba(255,255,255,0.09);
-      --shadow: 0 20px 50px -15px rgba(0,0,0,0.65);
-    }
-    [data-theme="light"] {
-      --bg: #f8fafc;
-      --bg-card: rgba(255,255,255,0.82);
-      --text: #1e293b;
-      --text-muted: #64748b;
-      --accent: #4f46e5;
-      --border: rgba(0,0,0,0.07);
-      --shadow: 0 12px 35px -10px rgba(0,0,0,0.15);
-    }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 2.5rem 1rem 4rem;
-      transition: background 0.5s ease;
-    }
-    header {
-      text-align: center;
-      margin-bottom: 2.5rem;
-    }
-    h1 {
-      font-size: clamp(2.4rem, 7vw, 4.2rem);
-      font-weight: 700;
-      background: linear-gradient(90deg, var(--accent), #a78bfa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .subtitle {
-      color: var(--text-muted);
-      font-size: 1.15rem;
-      margin-top: 0.6rem;
-    }
-    .controls {
-      display: flex;
-      justify-content: center;
-      gap: 1.2rem;
-      margin: 2rem 0 3rem;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    .theme-toggle {
-      background: rgba(255,255,255,0.09);
-      border: 1px solid var(--border);
-      color: var(--text);
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
-      transition: all 0.3s;
-      font-size: 1.4rem;
-    }
-    .theme-toggle:hover { transform: scale(1.12); }
-    .tab-group {
-      display: flex;
-      background: var(--bg-card);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 6px;
-      box-shadow: var(--shadow);
-    }
-    .tab {
-      padding: 12px 24px;
-      font-weight: 500;
-      color: var(--text-muted);
-      background: transparent;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.25s;
-    }
-    .tab:hover { color: var(--text); background: rgba(255,255,255,0.06); }
-    .tab.active {
-      background: var(--accent);
-      color: white;
-      box-shadow: 0 4px 16px rgba(99,102,241,0.45);
-    }
-    .tab-content {
-      max-width: 960px;
-      margin: 0 auto;
-      position: relative;
-      min-height: 600px;
-    }
-    .panel {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s ease;
-      background: var(--bg-card);
-      border-radius: 20px;
-      padding: 2rem;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(12px);
-    }
-    .panel.active {
-      opacity: 1;
-      pointer-events: auto;
-      position: relative;
-    }
-    .viewer-container {
-      position: relative;
-      margin: 2rem auto 1.5rem;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 20px 60px -20px rgba(0,0,0,0.5);
-    }
-    .viewer-container img,
-    #panorama {
-      width: 100%;
-      display: block;
-      border-radius: 16px;
-    }
-    #panorama {
-      height: 65vh;
-      min-height: 540px;
-    }
-    .loader {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.65);
-      backdrop-filter: blur(6px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-    }
-    .bounce {
-      width: 16px; height: 16px;
-      background: var(--accent);
-      border-radius: 50%;
-      margin: 0 9px;
-      animation: bounce 1.25s infinite ease-in-out both;
-    }
-    .bounce:nth-child(2) { animation-delay: -0.22s; }
-    .bounce:nth-child(1) { animation-delay: -0.44s; }
-    @keyframes bounce {
-      0%,80%,100% { transform: scale(0); opacity: 0.35; }
-      40% { transform: scale(1); opacity: 1; }
-    }
-    .info {
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 1rem;
-      margin-top: 1rem;
-    }
-    #enter-interior-btn {
-      position: absolute;
-      top: 1.2rem;
-      right: 1.2rem;
-      z-index: 15;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 50px;
-      padding: 0.9rem 1.8rem;
-      font-weight: 600;
-      font-size: 1.05rem;
-      cursor: pointer;
-      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
-      transition: all 0.28s ease;
-      backdrop-filter: blur(8px);
-    }
-    #enter-interior-btn:hover {
-      transform: translateY(-2px) scale(1.04);
-      box-shadow: 0 10px 30px rgba(99, 102, 241, 0.55);
-      background: #7c7eff;
-    }
-    #enter-interior-btn:active {
-      transform: scale(0.97);
-    }
-    @media (max-width: 640px) {
-      .tab-group { padding: 5px; }
-      .tab { padding: 10px 18px; font-size: 0.95rem; }
-      .controls { flex-direction: column; gap: 1.5rem; }
-      #enter-interior-btn {
-        top: 1rem;
-        right: 1rem;
-        padding: 0.7rem 1.4rem;
-        font-size: 0.95rem;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>360° Experience • All in One View</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdn.pannellum.org/2.5/pannellum.css" />
+    <script src="https://cdn.pannellum.org/2.5/pannellum.js"></script>
+    <style>
+      :root {
+        --bg: #0f0f17;
+        --bg-card: rgba(20, 20, 35, 0.7);
+        --text: #e2e8f0;
+        --text-muted: #94a3b8;
+        --accent: #6366f1;
+        --border: rgba(255, 255, 255, 0.09);
+        --shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.65);
       }
-    }
-  </style>
-</head>
-<body>
-<header>
-  <h1>360° Experience</h1>
-  <p class="subtitle">Switch between control styles — content stays in the same place</p>
-</header>
-<div class="controls">
-  <button class="theme-toggle" title="Toggle theme">☀️</button>
-  <div class="tab-group">
-    <button class="tab active" data-tab="drag">Drag</button>
-    <button class="tab" data-tab="mousemove">Mouse Move</button>
-    <button class="tab" data-tab="arrows">Arrows</button>
-    <button class="tab" data-tab="wheel">Wheel</button>
-    <button class="tab" data-tab="pano">Panorama</button>
-  </div>
-</div>
+      [data-theme="light"] {
+        --bg: #f8fafc;
+        --bg-card: rgba(255, 255, 255, 0.82);
+        --text: #1e293b;
+        --text-muted: #64748b;
+        --accent: #4f46e5;
+        --border: rgba(0, 0, 0, 0.07);
+        --shadow: 0 12px 35px -10px rgba(0, 0, 0, 0.15);
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 2.5rem 1rem 4rem;
+        transition: background 0.5s ease;
+      }
+      header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+      h1 {
+        font-size: clamp(2.4rem, 7vw, 4.2rem);
+        font-weight: 700;
+        background: linear-gradient(90deg, var(--accent), #a78bfa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .subtitle {
+        color: var(--text-muted);
+        font-size: 1.15rem;
+        margin-top: 0.6rem;
+      }
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 1.2rem;
+        margin: 2rem 0 3rem;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .theme-toggle {
+        background: rgba(255, 255, 255, 0.09);
+        border: 1px solid var(--border);
+        color: var(--text);
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 1.4rem;
+      }
+      .theme-toggle:hover {
+        transform: scale(1.12);
+      }
+      .tab-group {
+        display: flex;
+        background: var(--bg-card);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 6px;
+        box-shadow: var(--shadow);
+      }
+      .tab {
+        padding: 12px 24px;
+        font-weight: 500;
+        color: var(--text-muted);
+        background: transparent;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.25s;
+      }
+      .tab:hover {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .tab.active {
+        background: var(--accent);
+        color: white;
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.45);
+      }
+      .tab-content {
+        max-width: 960px;
+        margin: 0 auto;
+        position: relative;
+        min-height: 600px;
+      }
+      .panel {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        backdrop-filter: blur(12px);
+      }
+      .panel.active {
+        opacity: 1;
+        pointer-events: auto;
+        position: relative;
+      }
+      .viewer-container {
+        position: relative;
+        margin: 2rem auto 1.5rem;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.5);
+      }
+      .viewer-container img,
+      #panorama {
+        width: 100%;
+        display: block;
+        border-radius: 16px;
+      }
+      #panorama {
+        height: 65vh;
+        min-height: 540px;
+      }
+      .loader {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(6px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+      }
+      .bounce {
+        width: 16px;
+        height: 16px;
+        background: var(--accent);
+        border-radius: 50%;
+        margin: 0 9px;
+        animation: bounce 1.25s infinite ease-in-out both;
+      }
+      .bounce:nth-child(2) {
+        animation-delay: -0.22s;
+      }
+      .bounce:nth-child(1) {
+        animation-delay: -0.44s;
+      }
+      @keyframes bounce {
+        0%,
+        80%,
+        100% {
+          transform: scale(0);
+          opacity: 0.35;
+        }
+        40% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .info {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 1rem;
+        margin-top: 1rem;
+      }
+      #enter-interior-btn {
+        position: absolute;
+        top: 1.2rem;
+        right: 1.2rem;
+        z-index: 15;
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.9rem 1.8rem;
+        font-weight: 600;
+        font-size: 1.05rem;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        transition: all 0.28s ease;
+        backdrop-filter: blur(8px);
+      }
+      #enter-interior-btn:hover {
+        transform: translateY(-2px) scale(1.04);
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.55);
+        background: #7c7eff;
+      }
+      #enter-interior-btn:active {
+        transform: scale(0.97);
+      }
 
-<div class="tab-content">
-  <div class="panel active" id="panel-drag">
-    <h2>Drag to Rotate</h2>
-    <div class="viewer-container">
-      <div class="loader"><div class="bounce"></div><div class="bounce"></div><div class="bounce"></div></div>
-      <img id="img-drag" src="img/1.png" alt="360 product" draggable="false">
+
+      .pnlm-hotspot {
+        width: 28px !important;
+        height: 28px !important;
+        background: radial-gradient(
+          circle at 35% 35%,
+          rgba(255, 255, 255, 0.95),
+          var(--accent) 50%,
+          #4f46e5 80%
+        );
+        border: 2px solid rgba(255, 255, 255, 0.85);
+        border-radius: 10px; /* soft rounded square */
+        box-shadow:
+          0 0 18px rgba(99, 102, 241, 0.65),
+          inset 0 0 8px rgba(255, 255, 255, 0.55);
+        transform: translate(-50%, -50%);
+        cursor: pointer;
+        transition: all 0.24s ease;
+      }
+      .pnlm-hotspot:hover {
+        transform: translate(-50%, -50%) scale(1.35);
+        box-shadow:
+          0 0 32px #a78bfa,
+          0 0 48px var(--accent);
+        border-color: #ffffff;
+      }
+      .pnlm-tooltip {
+        background: rgba(180, 180, 180, 0.308);
+        border: 1px solid #ff0000;
+        border-radius: 80px;
+        padding: 13px 14px;
+        color: white;
+        font-weight: 500;
+        font-size: 0.95rem;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      }
+
+      @media (max-width: 640px) {
+        .tab-group {
+          padding: 5px;
+        }
+        .tab {
+          padding: 10px 18px;
+          font-size: 0.95rem;
+        }
+        .controls {
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+        #enter-interior-btn {
+          top: 1rem;
+          right: 1rem;
+          padding: 0.7rem 1.4rem;
+          font-size: 0.95rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>360° Experience</h1>
+      <p class="subtitle">
+        Switch between control styles — content stays in the same place
+      </p>
+    </header>
+    <div class="controls">
+      <button class="theme-toggle" title="Toggle theme">☀️</button>
+      <div class="tab-group">
+        <button class="tab active" data-tab="drag">Drag</button>
+        <button class="tab" data-tab="mousemove">Mouse Move</button>
+        <button class="tab" data-tab="arrows">Arrows</button>
+        <button class="tab" data-tab="wheel">Wheel</button>
+        <button class="tab" data-tab="pano">Panorama</button>
+      </div>
     </div>
-    <div class="info">Click + drag left/right • works on touch too</div>
-  </div>
 
-  <div class="panel" id="panel-mousemove">
-    <h2>Mouse Move</h2>
-    <div class="viewer-container">
-      <div class="loader"><div class="bounce"></div><div class="bounce"></div><div class="bounce"></div></div>
-      <img id="img-mousemove" src="img/1.png" alt="Product 360" draggable="false">
+    <div class="tab-content">
+      <div class="panel active" id="panel-drag">
+        <h2>Drag to Rotate</h2>
+        <div class="viewer-container">
+          <div class="loader">
+            <div class="bounce"></div>
+            <div class="bounce"></div>
+            <div class="bounce"></div>
+          </div>
+          <img
+            id="img-drag"
+            src="img/1.png"
+            alt="360 product"
+            draggable="false"
+          />
+        </div>
+        <div class="info">Click + drag left/right • works on touch too</div>
+      </div>
+
+      <div class="panel" id="panel-mousemove">
+        <h2>Mouse Move</h2>
+        <div class="viewer-container">
+          <div class="loader">
+            <div class="bounce"></div>
+            <div class="bounce"></div>
+            <div class="bounce"></div>
+          </div>
+          <img
+            id="img-mousemove"
+            src="img/1.png"
+            alt="Product 360"
+            draggable="false"
+          />
+        </div>
+        <div class="info">Just move mouse left/right over the image</div>
+      </div>
+
+      <div class="panel" id="panel-arrows">
+        <h2>Arrow Keys</h2>
+        <div class="viewer-container">
+          <div class="loader">
+            <div class="bounce"></div>
+            <div class="bounce"></div>
+            <div class="bounce"></div>
+          </div>
+          <img id="img-arrows" src="img/1.png" alt="360 product" tabindex="0" />
+        </div>
+        <div class="info">Click image to focus → use ← → (or ↑ ↓)</div>
+      </div>
+
+      <div class="panel" id="panel-wheel">
+        <h2>Mouse Wheel / Trackpad</h2>
+        <div class="viewer-container">
+          <div class="loader">
+            <div class="bounce"></div>
+            <div class="bounce"></div>
+            <div class="bounce"></div>
+          </div>
+          <img id="img-wheel" src="img/1.png" alt="Product 360" />
+        </div>
+        <div class="info">Hover image → scroll wheel or two-finger swipe</div>
+      </div>
+
+      <div class="panel" id="panel-pano">
+        <h2>Real Estate 360° View – Instant Interior Access</h2>
+
+        <button id="enter-interior-btn">Open Interior (zoomed)</button>
+
+        <div class="viewer-container">
+          <div class="loader">
+            <div class="bounce"></div>
+            <div class="bounce"></div>
+            <div class="bounce"></div>
+          </div>
+          <div id="panorama"></div>
+        </div>
+        <div class="info">
+          Drag to look around • Scroll/pinch to zoom • Click small rounded
+          square marker to enter/exit
+        </div>
+      </div>
     </div>
-    <div class="info">Just move mouse left/right over the image</div>
-  </div>
 
-  <div class="panel" id="panel-arrows">
-    <h2>Arrow Keys</h2>
-    <div class="viewer-container">
-      <div class="loader"><div class="bounce"></div><div class="bounce"></div><div class="bounce"></div></div>
-      <img id="img-arrows" src="img/1.png" alt="360 product" tabindex="0">
-    </div>
-    <div class="info">Click image to focus → use ← → (or ↑ ↓)</div>
-  </div>
+    <script>
+     
+      const themeToggle = document.querySelector(".theme-toggle");
+      const html = document.documentElement;
+      function setTheme(theme) {
+        html.setAttribute("data-theme", theme);
+        localStorage.setItem("theme", theme);
+        themeToggle.textContent = theme === "light" ? "🌙" : "☀️";
+      }
+      const saved =
+        localStorage.getItem("theme") ||
+        (window.matchMedia("(prefers-color-scheme: light)").matches
+          ? "light"
+          : "dark");
+      setTheme(saved);
+      themeToggle.addEventListener("click", () => {
+        setTheme(html.getAttribute("data-theme") === "dark" ? "light" : "dark");
+      });
 
-  <div class="panel" id="panel-wheel">
-    <h2>Mouse Wheel / Trackpad</h2>
-    <div class="viewer-container">
-      <div class="loader"><div class="bounce"></div><div class="bounce"></div><div class="bounce"></div></div>
-      <img id="img-wheel" src="img/1.png" alt="Product 360">
-    </div>
-    <div class="info">Hover image → scroll wheel or two-finger swipe</div>
-  </div>
+      
+      document.addEventListener("DOMContentLoaded", () => {
+        const tabs = document.querySelectorAll(".tab");
+        const panels = document.querySelectorAll(".panel");
+        tabs.forEach((tab) => {
+          tab.addEventListener("click", () => {
+            tabs.forEach((t) => t.classList.remove("active"));
+            tab.classList.add("active");
+            panels.forEach((p) => p.classList.remove("active"));
+            const tabName = tab.dataset.tab;
+            const targetPanel = document.getElementById(`panel-${tabName}`);
+            if (targetPanel) targetPanel.classList.add("active");
+          });
+        });
+        document.querySelector(".tab.active")?.click();
+      });
 
-  <div class="panel" id="panel-pano">
-    <h2>Real Estate 360° View – Instant Interior Access</h2>
     
-    <button id="enter-interior-btn">Open Interior (zoomed)</button>
+      const TOTAL_FRAMES = 51;
+      const PATH = "img/";
+      const EXT = "png";
 
-    <div class="viewer-container">
-      <div class="loader"><div class="bounce"></div><div class="bounce"></div><div class="bounce"></div></div>
-      <div id="panorama"></div>
-    </div>
-    <div class="info">Drag to look around • Scroll/pinch to zoom • Click button for instant zoomed interior</div>
-  </div>
-</div>
+      function normalizeFrame(f) {
+        return ((f - 1 + TOTAL_FRAMES * 100) % TOTAL_FRAMES) + 1;
+      }
 
-<script>
-// Theme toggle
-const themeToggle = document.querySelector('.theme-toggle');
-const html = document.documentElement;
-function setTheme(theme) {
-  html.setAttribute('data-theme', theme);
-  localStorage.setItem('theme', theme);
-  themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
-}
-const saved = localStorage.getItem('theme') ||
-  (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-setTheme(saved);
-themeToggle.addEventListener('click', () => {
-  setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-});
+      function updateFrame(img, newFrame) {
+        const safeFrame = normalizeFrame(newFrame);
+        img.src = `${PATH}${safeFrame}.${EXT}`;
+      }
 
-// Tab switching
-document.addEventListener('DOMContentLoaded', () => {
-  const tabs = document.querySelectorAll('.tab');
-  const panels = document.querySelectorAll('.panel');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      panels.forEach(p => p.classList.remove('active'));
-      const tabName = tab.dataset.tab;
-      const targetPanel = document.getElementById(`panel-${tabName}`);
-      if (targetPanel) targetPanel.classList.add('active');
-    });
-  });
-  document.querySelector('.tab.active')?.click();
-});
+      function hideLoader(el) {
+        setTimeout(() => {
+          const loader = el
+            .closest(".viewer-container")
+            ?.querySelector(".loader");
+          if (loader) loader.style.display = "none";
+        }, 300);
+      }
 
-// 360° product viewers (Drag, Mouse Move, Arrows, Wheel)
-const TOTAL_FRAMES = 51;
-const PATH = "img/";
-const EXT = "png";
+      // Drag
+      {
+        const img = document.getElementById("img-drag");
+        let isDragging = false;
+        let prevX = 0;
+        let currentFrame = 1;
+        img.addEventListener("mousedown", (e) => {
+          isDragging = true;
+          prevX = e.clientX;
+          e.preventDefault();
+        });
+        img.addEventListener("touchstart", (e) => {
+          isDragging = true;
+          prevX = e.touches[0].clientX;
+        });
+        const onMove = (e) => {
+          if (!isDragging) return;
+          const x = e.touches ? e.touches[0].clientX : e.clientX;
+          const delta = x - prevX;
+          if (Math.abs(delta) > 4) {
+            currentFrame += delta > 0 ? -1 : 1;
+            updateFrame(img, currentFrame);
+            prevX = x;
+          }
+        };
+        window.addEventListener("mousemove", onMove);
+        img.addEventListener("touchmove", onMove, { passive: false });
+        window.addEventListener("mouseup", () => (isDragging = false));
+        window.addEventListener("mouseleave", () => (isDragging = false));
+        img.addEventListener("touchend", () => (isDragging = false));
+        window.addEventListener("load", () => hideLoader(img));
+      }
 
-function normalizeFrame(f) {
-  return ((f - 1 + TOTAL_FRAMES * 100) % TOTAL_FRAMES) + 1;
-}
+      // Mouse Move
+      {
+        const img = document.getElementById("img-mousemove");
+        let lastX = window.innerWidth / 2;
+        let currentFrame = 1;
+        const onMove = (e) => {
+          const x = e.touches ? e.touches[0].clientX : e.clientX;
+          const delta = x - lastX;
+          if (Math.abs(delta) > 5) {
+            currentFrame += delta > 0 ? -1 : 1;
+            updateFrame(img, currentFrame);
+            lastX = x;
+          }
+        };
+        img.addEventListener("mousemove", onMove);
+        img.addEventListener("touchmove", onMove, { passive: false });
+        window.addEventListener("load", () => hideLoader(img));
+      }
 
-function updateFrame(img, newFrame) {
-  const safeFrame = normalizeFrame(newFrame);
-  img.src = `${PATH}${safeFrame}.${EXT}`;
-}
+      // Arrows
+      {
+        const img = document.getElementById("img-arrows");
+        let currentFrame = 1;
+        img.addEventListener("keydown", (e) => {
+          if (["ArrowLeft", "ArrowUp"].includes(e.key)) {
+            e.preventDefault();
+            currentFrame -= 1;
+            updateFrame(img, currentFrame);
+          }
+          if (["ArrowRight", "ArrowDown"].includes(e.key)) {
+            e.preventDefault();
+            currentFrame += 1;
+            updateFrame(img, currentFrame);
+          }
+        });
+        window.addEventListener("load", () => hideLoader(img));
+      }
 
-function hideLoader(el) {
-  setTimeout(() => {
-    const loader = el.closest('.viewer-container')?.querySelector('.loader');
-    if (loader) loader.style.display = 'none';
-  }, 300);
-}
+      // Wheel
+      {
+        const img = document.getElementById("img-wheel");
+        let currentFrame = 1;
+        img.addEventListener(
+          "wheel",
+          (e) => {
+            e.preventDefault();
+            currentFrame += e.deltaY > 0 ? 1 : -1;
+            updateFrame(img, currentFrame);
+          },
+          { passive: false },
+        );
+        window.addEventListener("load", () => hideLoader(img));
+      }
 
-// Drag
-{
-  const img = document.getElementById("img-drag");
-  let isDragging = false;
-  let prevX = 0;
-  let currentFrame = 1;
-  img.addEventListener("mousedown", e => { isDragging = true; prevX = e.clientX; e.preventDefault(); });
-  img.addEventListener("touchstart", e => { isDragging = true; prevX = e.touches[0].clientX; });
-  const onMove = e => {
-    if (!isDragging) return;
-    const x = e.touches ? e.touches[0].clientX : e.clientX;
-    const delta = x - prevX;
-    if (Math.abs(delta) > 4) {
-      currentFrame += delta > 0 ? -1 : 1;
-      updateFrame(img, currentFrame);
-      prevX = x;
-    }
-  };
-  window.addEventListener("mousemove", onMove);
-  img.addEventListener("touchmove", onMove, { passive: false });
-  window.addEventListener("mouseup", () => isDragging = false);
-  window.addEventListener("mouseleave",() => isDragging = false);
-  img.addEventListener("touchend", () => isDragging = false);
-  window.addEventListener("load", () => hideLoader(img));
-}
+      {
+        const container = document.getElementById("panorama");
+        const enterBtn = document.getElementById("enter-interior-btn");
 
-// Mouse Move
-{
-  const img = document.getElementById("img-mousemove");
-  let lastX = window.innerWidth / 2;
-  let currentFrame = 1;
-  const onMove = e => {
-    const x = e.touches ? e.touches[0].clientX : e.clientX;
-    const delta = x - lastX;
-    if (Math.abs(delta) > 5) {
-      currentFrame += delta > 0 ? -1 : 1;
-      updateFrame(img, currentFrame);
-      lastX = x;
-    }
-  };
-  img.addEventListener("mousemove", onMove);
-  img.addEventListener("touchmove", onMove, { passive: false });
-  window.addEventListener("load", () => hideLoader(img));
-}
+        const exteriorImg = "img/1.jpeg";
+        const interiorImg = "img/2.jpg";
+        let currentScene = "exterior";
 
-// Arrows
-{
-  const img = document.getElementById("img-arrows");
-  let currentFrame = 1;
-  img.addEventListener("keydown", e => {
-    if (["ArrowLeft", "ArrowUp"].includes(e.key)) {
-      e.preventDefault();
-      currentFrame -= 1;
-      updateFrame(img, currentFrame);
-    }
-    if (["ArrowRight", "ArrowDown"].includes(e.key)) {
-      e.preventDefault();
-      currentFrame += 1;
-      updateFrame(img, currentFrame);
-    }
-  });
-  window.addEventListener("load", () => hideLoader(img));
-}
+        const config = {
+          default: {
+            firstScene: "exterior",
+            sceneFadeDuration: 600,
+            autoRotate: -1.2,
+            compass: true,
+            showZoomCtrl: true,
+            showFullscreenCtrl: true,
+            // hotSpotDebug: true,
+          },
+          scenes: {
+            exterior: {
+              type: "equirectangular",
+              panorama: exteriorImg,
+              title: "Outside the Modern Building",
+              hfov: 110,
+              minHfov: 50,
+              maxHfov: 140,
+              pitch: -8,
+              yaw: 170,
 
-// Wheel
-{
-  const img = document.getElementById("img-wheel");
-  let currentFrame = 1;
-  img.addEventListener("wheel", e => {
-    e.preventDefault();
-    currentFrame += e.deltaY > 0 ? 1 : -1;
-    updateFrame(img, currentFrame);
-  }, { passive: false });
-  window.addEventListener("load", () => hideLoader(img));
-}
+              hotSpots: [
+                {
+                  pitch: -5,
+                  yaw: 160,
+                  type: "scene",
+                  text: "Enter Building",
+                  sceneId: "interior",
+                  targetPitch: -2,
+                  targetYaw: 0,
+                  targetHfov: 55,
+                  cssClass: "enter-hotspot",
+                },
+              ],
+            },
 
+            interior: {
+              type: "equirectangular",
+              panorama: interiorImg,
+              title: "Inside the Building – Close-up View",
+              hfov: 55,
+              minHfov: 35,
+              maxHfov: 120,
+              pitch: -2,
+              yaw: 0,
 
-{
-  const container = document.getElementById("panorama");
-  const enterBtn = document.getElementById("enter-interior-btn");
+              hotSpots: [
+                {
+                  pitch: 8,
+                  yaw: 180,
+                  type: "scene",
+                  text: "Exit to Exterior",
+                  sceneId: "exterior",
+                  targetPitch: -8,
+                  targetYaw: 170,
+                  targetHfov: 110,
+                  cssClass: "exit-hotspot",
+                },
+              ],
+            },
+          },
+        };
 
-  const exteriorImg = "img/1.jpeg";
-  const interiorImg = "img/2.jpg";
-  let currentScene = "exterior";
+        const viewer = pannellum.viewer("panorama", config);
 
-  const viewer = pannellum.viewer("panorama", {
-    default: {
-      firstScene: "exterior",
-      sceneFadeDuration: 600,
-      autoRotate: -1.2,
-      compass: true,
-      showZoomCtrl: true,
-      showFullscreenCtrl: true,
-    },
-    scenes: {
-      exterior: {
-        type: "equirectangular",
-        panorama: exteriorImg,
-        title: "Outside the Modern Building",
-        hfov: 110,
-        minHfov: 50,
-        maxHfov: 140,
-        pitch: -8,
-        yaw: 170,
-      },
-      interior: {
-        type: "equirectangular",
-        panorama: interiorImg,
-        title: "Inside the Building – Close-up View",
-        hfov: 55,              
-        minHfov: 35,          
-        maxHfov: 120,
-        pitch: -2,
-        yaw: 0,
-      },
-    },
-  });
+        function refreshHotspots() {
+          setTimeout(() => {
+            const scene = viewer.getScene();
+            if (scene === "exterior") {
+              viewer.setPitch(-8);
+              viewer.setYaw(170);
+            } else if (scene === "interior") {
+              viewer.setPitch(-2);
+              viewer.setYaw(0);
+            }
+            viewer.resize();
+          }, 120);
+        }
 
-  viewer.on("zoomchange", function (hfov) {
-    if (hfov < 70 && currentScene === "exterior") {
-      viewer.loadScene("interior", -2, viewer.getYaw(), 55);
-      currentScene = "interior";
-      enterBtn.textContent = "Back to Exterior";
-    } else if (hfov > 100 && currentScene === "interior") {
-      viewer.loadScene("exterior", -8, viewer.getYaw(), 110);
-      currentScene = "exterior";
-      enterBtn.textContent = "Open Interior (zoomed)";
-    }
-  });
+        viewer.on("scenechange", (sceneId) => {
+          currentScene = sceneId;
+          if (sceneId === "exterior") {
+            enterBtn.textContent = "Open Interior (zoomed)";
+          } else {
+            enterBtn.textContent = "Back to Exterior";
+          }
+          refreshHotspots();
+        });
 
- 
-  enterBtn.addEventListener("click", () => {
-    if (currentScene === "exterior") {
-      viewer.loadScene("interior", -2, 0, 55);   
-      currentScene = "interior";
-      enterBtn.textContent = "Back to Exterior";
-    } else {
-      viewer.loadScene("exterior", -8, 170, 110); 
-      currentScene = "exterior";
-      enterBtn.textContent = "Open Interior (zoomed)";
-    }
-  });
+        viewer.on("zoomchange", function (hfov) {
+          if (hfov < 70 && currentScene === "exterior") {
+            viewer.loadScene("interior", -2, viewer.getYaw(), 55);
+          } else if (hfov > 100 && currentScene === "interior") {
+            viewer.loadScene("exterior", -8, viewer.getYaw(), 110);
+          }
+        });
 
-  viewer.on('load', () => {
-    const loader = container.closest('.viewer-container')?.querySelector('.loader');
-    if (loader) loader.style.display = 'none';
-  });
+        enterBtn.addEventListener("click", () => {
+          if (currentScene === "exterior") {
+            viewer.loadScene("interior", -2, 0, 55);
+          } else {
+            viewer.loadScene("exterior", -8, 170, 110);
+          }
+        });
 
-  viewer.on('error', (evt) => {
-    console.error("Pannellum error:", evt);
-    const loader = container.closest('.viewer-container')?.querySelector('.loader');
-    if (loader) {
-      loader.style.display = 'none';
-      const errorMsg = document.createElement('p');
-      errorMsg.style.color = '#ff6b6b';
-      errorMsg.style.textAlign = 'center';
-      errorMsg.style.padding = '1.5rem';
-      errorMsg.textContent = 'Failed to load 360° images – check file paths/URLs';
-      container.appendChild(errorMsg);
-    }
-  });
+        viewer.on("load", () => {
+          const loader = container
+            .closest(".viewer-container")
+            ?.querySelector(".loader");
+          if (loader) loader.style.display = "none";
+          refreshHotspots();
+        });
 
-  setTimeout(() => {
-    const loader = container.closest('.viewer-container')?.querySelector('.loader');
-    if (loader && loader.style.display !== 'none') {
-      loader.style.display = 'none';
-    }
-  }, 12000);
-}
-</script>
-</body>
+        viewer.on("error", (evt) => {
+          console.error("Pannellum error:", evt);
+          const loader = container
+            .closest(".viewer-container")
+            ?.querySelector(".loader");
+          if (loader) {
+            loader.style.display = "none";
+            const errorMsg = document.createElement("p");
+            errorMsg.style.color = "#ff6b6b";
+            errorMsg.style.textAlign = "center";
+            errorMsg.style.padding = "1.5rem";
+            errorMsg.textContent =
+              "Failed to load 360° images – check file paths/URLs";
+            container.appendChild(errorMsg);
+          }
+        });
+
+        setTimeout(() => {
+          const loader = container
+            .closest(".viewer-container")
+            ?.querySelector(".loader");
+          if (loader && loader.style.display !== "none") {
+            loader.style.display = "none";
+          }
+        }, 12000);
+      }
+    </script>
+  </body>
 </html>
