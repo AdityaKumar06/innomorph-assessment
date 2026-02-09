@@ -53,5 +53,6 @@ Made with ❤️
 🔗 GitHub: [AdityaKumar06](https://github.com/AdityaKumar06)  
 🔗 LinkedIn: [Aditya Kumar](https://www.linkedin.com/in/adityakumar0614/)
 
+**Try it live right now!** 👉 [https://innomorph-assessment.vercel.app/](https://innomorph-assessment.vercel.app/)
 
 Star ⭐ if you like interactive 360° viewers!
